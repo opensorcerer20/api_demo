@@ -107,3 +107,4 @@ ISC
 
 ## ChangeLog
 - initial commit, setup express server with react and typescript
+- add connection to open meteo, fetch temperature given zip code (requires conversion to lat/long via library)
