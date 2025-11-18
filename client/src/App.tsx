@@ -11,6 +11,12 @@ interface WeatherData {
   location: string;
   zipcode: string;
   unit: string;
+  sunset: string;
+  isBeforeSunset: boolean;
+  eveningForecast: {
+    temperature: number;
+    time: string;
+  } | null;
 }
 
 function App() {
@@ -49,18 +55,31 @@ function App() {
         <h1>React + Express TypeScript</h1>
         <p>Message from server: {message || 'Loading...'}</p>
         
-        <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'rgba(255,255,255,0.1)', borderRadius: '8px', minWidth: '300px' }}>
+        <div className="weather-container">
           <h2>Weather Information</h2>
           {loading && <p>Loading weather data...</p>}
-          {error && <p style={{ color: '#ff6b6b' }}>Error: {error}</p>}
+          {error && <p className="error-message">Error: {error}</p>}
           {weather && (
             <div>
               <h3>{weather.location}</h3>
-              <p style={{ fontSize: '3rem', margin: '1rem 0', fontWeight: 'bold' }}>
+              <p className="current-temperature">
                 {weather.temperature}°F
               </p>
               <p>Humidity: {weather.humidity}%</p>
-              <p style={{ fontSize: '0.9rem', opacity: 0.7, marginTop: '1rem' }}>Zip Code: {weather.zipcode}</p>
+              
+              {weather.eveningForecast && (
+                <div className="evening-forecast">
+                  <h4>Evening Forecast</h4>
+                  <p className="evening-forecast-temp">
+                    {weather.eveningForecast.temperature}°F
+                  </p>
+                  <p className="evening-forecast-time">
+                    Around {new Date(weather.eveningForecast.time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                  </p>
+                </div>
+              )}
+              
+              <p className="zip-code">Zip Code: {weather.zipcode}</p>
             </div>
           )}
         </div>

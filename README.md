@@ -1,8 +1,10 @@
 # React + Express TypeScript App
 
-A full-stack application with React frontend and Express TypeScript backend.
+A full-stack application with React frontend and Express TypeScript backend. Mostly built using GitHub Copilot with oversight from developer for each change.
 
 ## Project Structure
+
+@todo update this when project completed
 
 ```
 api_demo/
@@ -108,3 +110,5 @@ ISC
 ## ChangeLog
 - initial commit, setup express server with react and typescript
 - add connection to open meteo, fetch temperature given zip code (requires conversion to lat/long via library)
+- add zod type checking, add evening forecast for 3am the next day if current zip code time is before sunset
+- (next: add testing)
