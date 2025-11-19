@@ -5,11 +5,16 @@ import {
   useState,
 } from 'react';
 
-import { useWeatherData } from './hooks/useWeatherData';
+import {
+  useWeatherData,
+  ZipCodeSchema,
+} from './hooks/useWeatherData';
 
 function App() {
   const [message, setMessage] = useState('');
-  const { weather, loading, error } = useWeatherData('78130');
+  const [currentZipCode, setCurrentZipCode] = useState('78130');
+  const [inputZipCode, setInputZipCode] = useState('78130');
+  const { weather, loading, error } = useWeatherData(currentZipCode);
 
   useEffect(() => {
     fetch('/api')
@@ -17,6 +22,16 @@ function App() {
       .then(data => setMessage(data.message))
       .catch(err => console.error('Error fetching data:', err));
   }, []);
+
+  const isZipCodeValid = ZipCodeSchema.safeParse(inputZipCode).success;
+  const isButtonDisabled = !isZipCodeValid || inputZipCode === currentZipCode;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isButtonDisabled) {
+      setCurrentZipCode(inputZipCode);
+    }
+  };
 
   return (
     <div className="App">
@@ -26,9 +41,28 @@ function App() {
         
         <div className="weather-container">
           <h2>Weather Information</h2>
-          {loading && <p>Loading weather data...</p>}
+          
+          <form onSubmit={handleSubmit} className="zip-code-form">
+            <input
+              type="text"
+              value={inputZipCode}
+              onChange={(e) => setInputZipCode(e.target.value)}
+              placeholder="Enter 5-digit zip code"
+              maxLength={5}
+              className="zip-code-input"
+            />
+            <button 
+              type="submit" 
+              disabled={isButtonDisabled}
+              className="zip-code-button"
+            >
+              Get Weather
+            </button>
+          </form>
+          
+          {loading && !error && <div className="spinner"></div>}
           {error && <p className="error-message">Error: {error}</p>}
-          {weather && (
+          {!loading && !error && weather && (
             <div>
               <h3>{weather.location}</h3>
               <p className="current-temperature">

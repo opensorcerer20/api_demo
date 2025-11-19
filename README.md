@@ -114,4 +114,6 @@ ISC
 - initial commit, setup express server with react and typescript
 - add connection to open meteo, fetch temperature given zip code (requires conversion to lat/long via library)
 - add zod type checking, add evening forecast for 3am the next day if current zip code time is before sunset
-- (next: add testing)
+- add testing and zod validation
+- add user input and loading spinner
+

@@ -6,7 +6,7 @@ import {
 import { z } from 'zod';
 
 // Zod schema for validating zip code
-const ZipCodeSchema = z.string().regex(/^\d{5}$/, 'Zip code must be 5 digits');
+export const ZipCodeSchema = z.string().regex(/^\d{5}$/, 'Zip code must be 5 digits');
 
 export interface WeatherData {
   temperature: number;
@@ -28,6 +28,11 @@ export function useWeatherData(zipcode: string) {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    // Reset state when zipcode changes
+    setLoading(true);
+    setError('');
+    setWeather(null);
+    
     // Validate zip code format before making API call
     const validation = ZipCodeSchema.safeParse(zipcode);
     if (!validation.success) {
