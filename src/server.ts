@@ -58,6 +58,67 @@ const OpenMeteoResponseSchema = z.object({
 
 type OpenMeteoResponse = z.infer<typeof OpenMeteoResponseSchema>;
 
+// Zod schema for Weather API response sent to client
+const WeatherApiResponseSchema = z.object({
+  temperature: z.number(),
+  humidity: z.number(),
+  location: z.string(),
+  zipcode: z.string(),
+  unit: z.string(),
+  sunset: z.string(),
+  isBeforeSunset: z.boolean(),
+  eveningForecast: z.object({
+    temperature: z.number(),
+    time: z.string(),
+  }).nullable(),
+});
+
+export type WeatherApiResponse = z.infer<typeof WeatherApiResponseSchema>;
+
+// Pure functions for better testability
+
+export function isBeforeSunset(currentTime: Date, sunsetTime: Date): boolean {
+  return currentTime < sunsetTime;
+}
+
+export function findEveningForecast(
+  hourlyTimes: string[],
+  hourlyTemps: number[],
+  currentTimeStr: string
+): { temperature: number; time: string } | null {
+  const currentDate = new Date(currentTimeStr);
+  
+  // Calculate tomorrow's date by adding 1 day
+  const tomorrowDate = new Date(currentDate);
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+  
+  const eveningHourIndex = hourlyTimes.findIndex(time => {
+    const forecastTime = new Date(time);
+    
+    // Check if it's tomorrow and at 3 AM
+    return forecastTime.getFullYear() === tomorrowDate.getFullYear() &&
+           forecastTime.getMonth() === tomorrowDate.getMonth() &&
+           forecastTime.getDate() === tomorrowDate.getDate() &&
+           forecastTime.getHours() === 3;
+  });
+  
+  if (eveningHourIndex !== -1) {
+    return {
+      temperature: hourlyTemps[eveningHourIndex],
+      time: hourlyTimes[eveningHourIndex],
+    };
+  }
+  
+  return null;
+}
+
+export function formatLocation(city: string, state: string): string {
+  return `${city}, ${state}`;
+}
+
+// Zod schema for validating zip code
+const ZipCodeSchema = z.string().regex(/^\d{5}$/, 'Zip code must be 5 digits');
+
 // API routes
 app.get('/api', (req, res) => {
   res.json({ message: 'this message comes from GET at /api' });
@@ -65,6 +126,15 @@ app.get('/api', (req, res) => {
 
 app.get('/api/weather/:zipcode', async (req, res) => {
   const zipcode = req.params.zipcode;
+  
+  // Validate zip code format
+  const zipCodeValidation = ZipCodeSchema.safeParse(zipcode);
+  if (!zipCodeValidation.success) {
+    return res.status(400).json({ 
+      error: 'Invalid zip code format. Must be 5 digits.',
+      details: zipCodeValidation.error.issues 
+    });
+  }
   
   // Get coordinates for the zip code using zipcodes library
   const locationData = zipcodes.lookup(zipcode);
@@ -94,39 +164,28 @@ app.get('/api/weather/:zipcode', async (req, res) => {
     const sunsetTime = new Date(data.daily.sunset[0]);
     
     // Determine if we should show evening forecast (before sunset)
-    const isBeforeSunset = currentTime < sunsetTime;
+    const shouldShowForecast = isBeforeSunset(currentTime, sunsetTime);
     
     // Find temperature for next day at 3 AM local time
-    let eveningForecast = null;
-    if (isBeforeSunset) {
-      // Look for 3:00 AM tomorrow in hourly data
-      const eveningHourIndex = data.hourly.time.findIndex(time => {
-        const forecastTime = new Date(time);
-        const currentDate = new Date(data.current.time);
-        
-        // Check if it's tomorrow and at 3 AM
-        return forecastTime.getDate() === currentDate.getDate() + 1 && 
-               forecastTime.getHours() === 3;
-      });
-      
-      if (eveningHourIndex !== -1) {
-        eveningForecast = {
-          temperature: data.hourly.temperature_2m[eveningHourIndex],
-          time: data.hourly.time[eveningHourIndex],
-        };
-      }
-    }
+    const eveningForecast = shouldShowForecast
+      ? findEveningForecast(data.hourly.time, data.hourly.temperature_2m, data.current.time)
+      : null;
     
-    res.json({
+    const weatherResponse = {
       temperature: data.current.temperature_2m,
       humidity: data.current.relative_humidity_2m,
-      location: `${locationData.city}, ${locationData.state}`,
+      location: formatLocation(locationData.city, locationData.state),
       zipcode: zipcode,
       unit: 'fahrenheit',
       sunset: data.daily.sunset[0],
-      isBeforeSunset,
+      isBeforeSunset: shouldShowForecast,
       eveningForecast,
-    });
+    };
+    
+    // Validate the response before sending to client
+    const validatedResponse = WeatherApiResponseSchema.parse(weatherResponse);
+    
+    res.json(validatedResponse);
   } catch (error) {
     if (error instanceof z.ZodError) {
       console.error('Open-Meteo API response validation failed:', error.issues);

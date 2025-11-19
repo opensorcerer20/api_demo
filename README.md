@@ -85,6 +85,9 @@ This runs the production server which serves the built React app and handles API
 - `npm run build:client` - Build only the React frontend
 - `npm run build:server` - Build only the Express backend
 - `npm start` - Run the production server
+- `npm test` - Run unit tests in watch mode
+- `npm test -- --run` - Run unit tests once
+- `npm run test:ui` - Run tests with visual UI
 
 ## API Endpoints
 

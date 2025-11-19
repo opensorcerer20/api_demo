@@ -9,7 +9,9 @@
     "dev:client": "vite",
     "build": "npm run build:client && npm run build:server",
     "build:client": "vite build",
-    "build:server": "tsc"
+    "build:server": "tsc",
+    "test": "vitest",
+    "test:ui": "vitest --ui"
   },
   "keywords": [],
   "author": "opensorcerer20",
@@ -29,9 +31,11 @@
     "@types/react-dom": "^19.2.3",
     "@types/zipcodes": "^8.0.5",
     "@vitejs/plugin-react": "^5.1.1",
+    "@vitest/ui": "^4.0.10",
     "nodemon": "^3.1.11",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
-    "vite": "^7.2.2"
+    "vite": "^7.2.2",
+    "vitest": "^4.0.10"
   }
 }

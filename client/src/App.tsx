@@ -5,48 +5,17 @@ import {
   useState,
 } from 'react';
 
-interface WeatherData {
-  temperature: number;
-  humidity: number;
-  location: string;
-  zipcode: string;
-  unit: string;
-  sunset: string;
-  isBeforeSunset: boolean;
-  eveningForecast: {
-    temperature: number;
-    time: string;
-  } | null;
-}
+import { useWeatherData } from './hooks/useWeatherData';
 
 function App() {
   const [message, setMessage] = useState('');
-  const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { weather, loading, error } = useWeatherData('78130');
 
   useEffect(() => {
     fetch('/api')
       .then(res => res.json())
       .then(data => setMessage(data.message))
       .catch(err => console.error('Error fetching data:', err));
-
-    // Fetch weather for zip code 78130
-    fetch('/api/weather/78130')
-      .then(res => res.json())
-      .then(data => {
-        if (data.error) {
-          setError(data.error);
-        } else {
-          setWeather(data);
-        }
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Error fetching weather:', err);
-        setError('Failed to fetch weather data');
-        setLoading(false);
-      });
   }, []);
 
   return (
