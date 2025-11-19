@@ -116,4 +116,4 @@ ISC
 - add zod type checking, add evening forecast for 3am the next day if current zip code time is before sunset
 - add testing and zod validation
 - add user input and loading spinner
-
+- extract weather widget, add weather forecast
