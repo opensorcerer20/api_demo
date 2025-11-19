@@ -20,6 +20,11 @@ export interface WeatherData {
     temperature: number;
     time: string;
   } | null;
+  dailyForecast: Array<{
+    date: string;
+    highTemp: number;
+    lowTemp: number;
+  }>;
 }
 
 export function useWeatherData(zipcode: string) {

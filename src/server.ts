@@ -41,10 +41,14 @@ const OpenMeteoResponseSchema = z.object({
   daily_units: z.object({
     time: z.string(),
     sunset: z.string(),
+    temperature_2m_max: z.string(),
+    temperature_2m_min: z.string(),
   }),
   daily: z.object({
     time: z.array(z.string()),
     sunset: z.array(z.string()),
+    temperature_2m_max: z.array(z.number()),
+    temperature_2m_min: z.array(z.number()),
   }),
   hourly_units: z.object({
     time: z.string(),
@@ -71,6 +75,11 @@ const WeatherApiResponseSchema = z.object({
     temperature: z.number(),
     time: z.string(),
   }).nullable(),
+  dailyForecast: z.array(z.object({
+    date: z.string(),
+    highTemp: z.number(),
+    lowTemp: z.number(),
+  })),
 });
 
 export type WeatherApiResponse = z.infer<typeof WeatherApiResponseSchema>;
@@ -145,9 +154,9 @@ app.get('/api/weather/:zipcode', async (req, res) => {
 
   try {
     // Fetch weather data from Open-Meteo API with daily sunset and hourly forecast
-    // Using 2 days to fetch 3am forecast if current zip code time is before sunset
+    // Using forecast_days=5 to get current day + next 3 days for 3-day forecast
     const response = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${locationData.latitude}&longitude=${locationData.longitude}&current=temperature_2m,relative_humidity_2m,weather_code&hourly=temperature_2m&daily=sunset&temperature_unit=fahrenheit&timezone=auto&forecast_days=2`
+      `https://api.open-meteo.com/v1/forecast?latitude=${locationData.latitude}&longitude=${locationData.longitude}&current=temperature_2m,relative_humidity_2m,weather_code&hourly=temperature_2m&daily=sunset,temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto&forecast_days=5`
     );
     
     if (!response.ok) {
@@ -171,6 +180,13 @@ app.get('/api/weather/:zipcode', async (req, res) => {
       ? findEveningForecast(data.hourly.time, data.hourly.temperature_2m, data.current.time)
       : null;
     
+    // Get next 3 days forecast (skip today, get days 1, 2, 3)
+    const dailyForecast = data.daily.time.slice(1, 4).map((date, index) => ({
+      date: date,
+      highTemp: data.daily.temperature_2m_max[index + 1],
+      lowTemp: data.daily.temperature_2m_min[index + 1],
+    }));
+    
     const weatherResponse = {
       temperature: data.current.temperature_2m,
       humidity: data.current.relative_humidity_2m,
@@ -180,6 +196,7 @@ app.get('/api/weather/:zipcode', async (req, res) => {
       sunset: data.daily.sunset[0],
       isBeforeSunset: shouldShowForecast,
       eveningForecast,
+      dailyForecast,
     };
     
     // Validate the response before sending to client

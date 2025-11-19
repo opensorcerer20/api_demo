@@ -125,7 +125,42 @@
 }
 
 .zip-code {
+  margin-top: 0.5rem;
   font-size: 0.9rem;
-  opacity: 0.7;
-  margin-top: 1rem;
+  color: #666;
+}
+
+.daily-forecast {
+  display: flex;
+  gap: 1rem;
+  margin: 0;
+  justify-content: center;
+}
+
+.forecast-day {
+  max-width: 100px;
+  padding: 0.5rem;
+  background: rgba(100, 150, 255, 0.2);
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.forecast-date {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.forecast-high {
+  font-size: 0.9rem;
+  color: #d32f2f;
+  margin: 0.25rem 0;
+}
+
+.forecast-low {
+  font-size: 0.9rem;
+  color: #1976d2;
+  margin: 0.25rem 0;
 }
